@@ -38,7 +38,7 @@ functions:
           cors: true
           request:
             template:
-              application/json: '{ "path" : "$input.params(''path'')", "row" : "$input.params(''row'')" }'
+              application/json: '{ "path" : "$input.params(''path'')", "row" : "$input.params(''row'')", "full" : "$input.params(''full'')" }'
 
   sentinel:
     handler: handler.sentinel
@@ -52,4 +52,4 @@ functions:
           cors: true
           request:
             template:
-              application/json: '{ "utm" : "$input.params(''utm'')", "grid" : "$input.params(''grid'')", "lat" : "$input.params(''lat'')" }'
+              application/json: '{ "utm" : "$input.params(''utm'')", "grid" : "$input.params(''grid'')", "lat" : "$input.params(''lat'')", "full" : "$input.params(''full'')" }'
