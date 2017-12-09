@@ -21,7 +21,6 @@ const generate_year_range = (start, end) => {
 
 
 const aws_list_directory = (bucket, prefix, s3) => {
-
   const params = {
     Bucket: bucket,
     Delimiter: '/',
@@ -39,6 +38,39 @@ const aws_list_directory = (bucket, prefix, s3) => {
 };
 
 
+const parseSceneid_c1 = (sceneid) => {
+  const sceneid_info = sceneid.split('_');
+  return {
+    scene_id: sceneid,
+    satellite: sceneid_info[0].slice(0,1) + sceneid_info[0].slice(3),
+    sensor: sceneid_info[0].slice(1,2),
+    correction_level: sceneid_info[1],
+    path: sceneid_info[2].slice(0,3),
+    row: sceneid_info[2].slice(3),
+    acquisition_date: sceneid_info[3],
+    ingestion_date: sceneid_info[4],
+    collection: sceneid_info[5],
+    category: sceneid_info[6]
+  };
+};
+
+
+const parseSceneid_pre = (sceneid) => {
+  return {
+    scene_id: sceneid,
+    satellite: sceneid.slice(2,3),
+    sensor: sceneid.slice(1,2),
+    path: sceneid.slice(3,6),
+    row: sceneid.slice(6,9),
+    acquisitionYear: sceneid.slice(9,13),
+    acquisitionJulianDay: sceneid.slice(13,16),
+    acquisition_date: moment().utc().year(sceneid.slice(9,13)).dayOfYear(sceneid.slice(13,16)).format('YYYYMMDD'),
+    groundStationIdentifier: sceneid.slice(16,19),
+    archiveVersion: sceneid.slice(19,21)
+  };
+};
+
+
 const get_l8_info = (bucket, key, s3) => {
   const params = {
     Bucket: bucket,
@@ -48,24 +80,21 @@ const get_l8_info = (bucket, key, s3) => {
     .then(data => {
       data = JSON.parse(data.Body.toString());
       let metadata = data.L1_METADATA_FILE;
-      let info = {
-        date: metadata.PRODUCT_METADATA.DATE_ACQUIRED,
-        row: zeroPad(metadata.PRODUCT_METADATA.WRS_ROW, 3),
-        path: zeroPad(metadata.PRODUCT_METADATA.WRS_PATH, 3),
-        cloud_coverage: metadata.IMAGE_ATTRIBUTES.CLOUD_COVER};
-
-      if ('LANDSAT_PRODUCT_ID' in  metadata.METADATA_FILE_INFO) {
-        info.scene_id = metadata.METADATA_FILE_INFO.LANDSAT_PRODUCT_ID;
-        info.browseURL = `https://landsat-pds.s3.amazonaws.com/c1/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_large.jpg`;
-        info.thumbURL = `https://landsat-pds.s3.amazonaws.com/c1/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_small.jpg`;
-        info.type = info.scene_id.slice(-2);
-      } else {
-        info.scene_id = metadata.METADATA_FILE_INFO.LANDSAT_SCENE_ID;
-        info.browseURL = `https://landsat-pds.s3.amazonaws.com/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_large.jpg`;
-        info.thumbURL = `https://landsat-pds.s3.amazonaws.com/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_small.jpg`;
-        info.type = 'pre';
-      }
-      return info;
+      return {
+        cloud_coverage: metadata.IMAGE_ATTRIBUTES.CLOUD_COVER,
+        cloud_coverage_land: metadata.IMAGE_ATTRIBUTES.CLOUD_COVER_LAND,
+        sun_azimuth: metadata.IMAGE_ATTRIBUTES.SUN_AZIMUTH,
+        sun_elevation: metadata.IMAGE_ATTRIBUTES.SUN_ELEVATION,
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [metadata.PRODUCT_METADATA.CORNER_UR_LON_PRODUCT, metadata.PRODUCT_METADATA.CORNER_UR_LAT_PRODUCT],
+            [metadata.PRODUCT_METADATA.CORNER_UL_LON_PRODUCT, metadata.PRODUCT_METADATA.CORNER_UL_LAT_PRODUCT],
+            [metadata.PRODUCT_METADATA.CORNER_LL_LON_PRODUCT, metadata.PRODUCT_METADATA.CORNER_LL_LAT_PRODUCT],
+            [metadata.PRODUCT_METADATA.CORNER_LR_LON_PRODUCT, metadata.PRODUCT_METADATA.CORNER_LR_LAT_PRODUCT],
+            [metadata.PRODUCT_METADATA.CORNER_UR_LON_PRODUCT, metadata.PRODUCT_METADATA.CORNER_UR_LAT_PRODUCT]
+          ]]
+        }};
     })
     .catch(() => {
       return {};
@@ -81,19 +110,11 @@ const get_s2_info = (bucket, key, s3) => {
   return s3.getObject(params).promise()
     .then(data => {
       data = JSON.parse(data.Body.toString());
-      let info = {
-        date: moment(data.timestamp).format('YYYY-MM-DD'),
-        path: data.path,
-        utm_zone: data.utmZone,
-        grid_square: data.gridSquare,
-        latitude_band: data.latitudeBand,
-        cloud: data.cloudyPixelPercentage,
-        sat: data.productName.slice(0,3),
-        num: data.path.slice(-1),
-        browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${data.path}/preview.jpg`
-      };
-      info.scene_id = `${info.sat}_tile_${info.date.replace(/-/g,'')}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
-      return info;
+      return {
+        cloud_coverage: data.cloudyPixelPercentage,
+        coverage: data.dataCoveragePercentage,
+        geometry : data.tileGeometry,
+        sat: data.productName.slice(0,3)};
     })
     .catch(() => {
       return {};
@@ -101,9 +122,12 @@ const get_s2_info = (bucket, key, s3) => {
 };
 
 
-const get_landsat = (path, row) => {
+const get_landsat = (path, row, full=false) => {
   const s3 = new AWS.S3({region: 'us-west-2'});
   const landsat_bucket = 'landsat-pds';
+
+  row = utils.zeroPad(row, 3);
+  path = utils.zeroPad(path, 3);
 
   const level = ['L8', 'c1/L8'];
 
@@ -116,14 +140,35 @@ const get_landsat = (path, row) => {
       dirs = [].concat.apply([], dirs);
       return Promise.all(dirs.map(e => {
         let landsat_id = e.split('/').slice(-2,-1)[0];
-        let json_path = `${e}${landsat_id}_MTL.json`;
-        return utils.get_l8_info(landsat_bucket, json_path, s3);
+        let info, aws_url;
+
+        if (/L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|RT)/.exec(landsat_id)) {
+          info = utils.parseSceneid_c1(landsat_id);
+          info.type = info.category;
+          aws_url = 'https://landsat-pds.s3.amazonaws.com/c1';
+        } else {
+          info = utils.parseSceneid_pre(landsat_id);
+          info.type = 'pre';
+          aws_url = 'https://landsat-pds.s3.amazonaws.com';
+        }
+        info.browseURL = `${aws_url}/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_large.jpg`;
+        info.thumbURL = `${aws_url}/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_small.jpg`;
+
+        if (full) {
+          let json_path = `${e}${landsat_id}_MTL.json`;
+          return utils.get_l8_info(landsat_bucket, json_path, s3)
+            .then(data => {
+              return Object.assign({}, info, data);
+            });
+        } else {
+          return info;
+        }
       }));
     });
 };
 
 
-const get_sentinel = (utm, grid, lat) => {
+const get_sentinel = (utm, lat, grid, full=false) => {
   const s3 = new AWS.S3({region: 'eu-central-1'});
   const sentinel_bucket = 'sentinel-s2-l1c';
   const img_year = utils.generate_year_range(2015, moment().year());
@@ -151,8 +196,33 @@ const get_sentinel = (utm, grid, lat) => {
       //create list of image
       data = [].concat.apply([], data);
       return Promise.all(data.map(e => {
-        let json_path = `${e}tileInfo.json`;
-        return utils.get_s2_info(sentinel_bucket, json_path, s3);
+        let s2path = e.replace(/\/$/, '');
+        let yeah = s2path.split('/')[4];
+        let month = utils.zeroPad(s2path.split('/')[5], 2);
+        let day = utils.zeroPad(s2path.split('/')[6], 2);
+
+        let info = {
+          path: s2path,
+          utm_zone: s2path.split('/')[1],
+          latitude_band: s2path.split('/')[2],
+          grid_square: s2path.split('/')[3],
+          num: s2path.split('/')[7],
+          acquisition_date: `${yeah}${month}${day}`,
+          browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${s2path}/preview.jpg`};
+
+        info.scene_id = `S2A_tile_${info.date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
+
+        if (full) {
+          let json_path = `${e}tileInfo.json`;
+          return utils.get_s2_info(sentinel_bucket, json_path, s3)
+            .then(data => {
+              info = Object.assign({}, info, data);
+              info.scene_id = `${info.sat}_tile_${info.date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
+              return info;
+            });
+        } else {
+          return info;
+        }
       }));
     });
 };
@@ -161,9 +231,12 @@ const get_sentinel = (utm, grid, lat) => {
 const utils = {
   generate_year_range: generate_year_range,
   aws_list_directory:  aws_list_directory,
+  parseSceneid_pre:    parseSceneid_pre,
+  parseSceneid_c1:     parseSceneid_c1,
+  get_sentinel:        get_sentinel,
+  get_landsat:         get_landsat,
   get_s2_info:         get_s2_info,
   get_l8_info:         get_l8_info,
-  get_landsat:         get_landsat,
-  get_sentinel:        get_sentinel
+  zeroPad:             zeroPad
 };
 module.exports = utils;
