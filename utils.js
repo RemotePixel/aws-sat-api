@@ -111,7 +111,7 @@ const get_s2_info = (bucket, key, s3) => {
     .then(data => {
       data = JSON.parse(data.Body.toString());
       return {
-        cloud: data.cloudyPixelPercentage,
+        cloud_coverage: data.cloudyPixelPercentage,
         coverage: data.dataCoveragePercentage,
         geometry : data.tileGeometry,
         sat: data.productName.slice(0,3)};
