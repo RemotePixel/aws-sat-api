@@ -5,7 +5,7 @@ provider:
 
   runtime: nodejs6.10
 
-  stage: production
+  stage: ${opt:stage, 'production'}
 
   region: us-east-1
 
@@ -22,6 +22,8 @@ provider:
       Resource:
         - "arn:aws:s3:::landsat-pds"
         - "arn:aws:s3:::sentinel-s2-l1c"
+
+  deploymentBucket: remotepixel-${self:provider.region}
 
 functions:
   landsat:

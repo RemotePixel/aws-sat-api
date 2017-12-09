@@ -43,7 +43,7 @@ const parseSceneid_c1 = (sceneid) => {
   return {
     scene_id: sceneid,
     satellite: sceneid_info[0].slice(0,1) + sceneid_info[0].slice(3),
-    sensor:  sceneid_info[0].slice(1,2),
+    sensor: sceneid_info[0].slice(1,2),
     correction_level: sceneid_info[1],
     path: sceneid_info[2].slice(0,3),
     row: sceneid_info[2].slice(3),
@@ -59,7 +59,7 @@ const parseSceneid_pre = (sceneid) => {
   return {
     scene_id: sceneid,
     satellite: sceneid.slice(2,3),
-    sensor:  sceneid.slice(1,2),
+    sensor: sceneid.slice(1,2),
     path: sceneid.slice(3,6),
     row: sceneid.slice(6,9),
     acquisitionYear: sceneid.slice(9,13),
@@ -207,7 +207,7 @@ const get_sentinel = (utm, lat, grid, full=false) => {
           latitude_band: s2path.split('/')[2],
           grid_square: s2path.split('/')[3],
           num: s2path.split('/')[7],
-          date: `${yeah}${month}${day}`,
+          acquisition_date: `${yeah}${month}${day}`,
           browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${s2path}/preview.jpg`};
 
         info.scene_id = `S2A_tile_${info.date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
