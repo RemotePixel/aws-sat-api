@@ -58,10 +58,12 @@ const get_l8_info = (bucket, key, s3) => {
         info.scene_id = metadata.METADATA_FILE_INFO.LANDSAT_PRODUCT_ID;
         info.browseURL = `https://landsat-pds.s3.amazonaws.com/c1/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_large.jpg`;
         info.thumbURL = `https://landsat-pds.s3.amazonaws.com/c1/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_small.jpg`;
+        info.type = info.scene_id.slice(-2);
       } else {
         info.scene_id = metadata.METADATA_FILE_INFO.LANDSAT_SCENE_ID;
         info.browseURL = `https://landsat-pds.s3.amazonaws.com/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_large.jpg`;
         info.thumbURL = `https://landsat-pds.s3.amazonaws.com/L8/${info.path}/${info.row}/${info.scene_id}/${info.scene_id}_thumb_small.jpg`;
+        info.type = 'pre';
       }
       return info;
     })
