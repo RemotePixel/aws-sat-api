@@ -79,7 +79,7 @@ const get_s2_info = (bucket, key, s3) => {
   return s3.getObject(params).promise()
     .then(data => {
       data = JSON.parse(data.Body.toString());
-      return {
+      let info = {
         date: moment(data.timestamp).format('YYYY-MM-DD'),
         path: data.path,
         utm_zone: data.utmZone,
@@ -87,8 +87,11 @@ const get_s2_info = (bucket, key, s3) => {
         latitude_band: data.latitudeBand,
         cloud: data.cloudyPixelPercentage,
         sat: data.productName.slice(0,3),
+        num: data.path.slice(-1),
         browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${data.path}/preview.jpg`
       };
+      info.scene_id = `${info.sat}_tile_${info.date.replace(/-/g,'')}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
+      return info;
     })
     .catch(() => {
       return {};
