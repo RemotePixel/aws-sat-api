@@ -1,0 +1,53 @@
+service: sat-api
+
+provider:
+  name: aws
+
+  runtime: nodejs6.10
+
+  stage: production
+
+  region: us-east-1
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+      Resource:
+        - "arn:aws:s3:::landsat-pds/*"
+        - "arn:aws:s3:::sentinel-s2-l1c/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource:
+        - "arn:aws:s3:::landsat-pds"
+        - "arn:aws:s3:::sentinel-s2-l1c"
+
+functions:
+  landsat:
+    handler: handler.landsat
+    memorySize: 512
+    timeout: 10
+    events:
+      - http:
+          integration: lambda
+          path: landsat
+          method: get
+          cors: true
+          request:
+            template:
+              application/json: '{ "path" : "$input.params(''path'')", "row" : "$input.params(''row'')" }'
+
+  sentinel:
+    handler: handler.sentinel
+    memorySize: 512
+    timeout: 10
+    events:
+      - http:
+          integration: lambda
+          path: sentinel
+          method: get
+          cors: true
+          request:
+            template:
+              application/json: '{ "utm" : "$input.params(''utm'')", "grid" : "$input.params(''grid'')", "lat" : "$input.params(''lat'')" }'

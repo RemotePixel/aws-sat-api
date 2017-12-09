@@ -1,0 +1,33 @@
+{
+  "name": "aws-sat-api",
+  "version": "0.0.1",
+  "engines": {
+    "node": "6.10.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/remotepixel/aws-sat-api.git"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.6.9",
+    "moment": "^2.19.3",
+    "fastlog": "^1.1.0"
+  },
+  "devDependencies": {
+    "@mapbox/mock-aws-sdk-js": "0.0.4",
+    "codecov": "^2.2.0",
+    "eslint": ">=3.8.1",
+    "eslint-config-google": "^0.7.1",
+    "eslint-config-standard": "^6.2.1",
+    "eslint-plugin-promise": "^3.4.0",
+    "eslint-plugin-standard": "^2.0.1",
+    "nyc": "^10.0.0",
+    "sinon": "^1.17.7",
+    "tape": "^3.5.0"
+  },
+  "scripts": {
+    "test": "nyc tape test/*.test.js"
+  },
+  "author": "Vincent Sarago for RemotePixel",
+  "license": "BDS-3"
+}
