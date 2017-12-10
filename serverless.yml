@@ -40,6 +40,21 @@ functions:
             template:
               application/json: '{ "path" : "$input.params(''path'')", "row" : "$input.params(''row'')", "full" : "$input.params(''full'')" }'
 
+  cbers:
+    handler: handler.cbers
+    memorySize: 512
+    timeout: 10
+    events:
+      - http:
+          integration: lambda
+          path: cbers
+          method: get
+          cors: true
+          request:
+            template:
+              application/json: '{ "path" : "$input.params(''path'')", "row" : "$input.params(''row'')" }'
+
+
   sentinel:
     handler: handler.sentinel
     memorySize: 512
