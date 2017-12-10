@@ -23,7 +23,7 @@ provider:
         - "arn:aws:s3:::landsat-pds"
         - "arn:aws:s3:::sentinel-s2-l1c"
 
-  deploymentBucket: remotepixel-${self:provider.region}
+  # deploymentBucket: remotepixel-${self:provider.region}
 
 functions:
   landsat:

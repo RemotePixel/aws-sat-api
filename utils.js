@@ -217,7 +217,7 @@ const get_sentinel = (utm, lat, grid, full=false) => {
           return utils.get_s2_info(sentinel_bucket, json_path, s3)
             .then(data => {
               info = Object.assign({}, info, data);
-              info.scene_id = `${info.sat}_tile_${info.date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
+              info.scene_id = `${info.sat}_tile_${info.acquisition_date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
               return info;
             });
         } else {
