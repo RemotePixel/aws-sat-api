@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.1
+-----
+- add cbers support
+
+
 0.1.0
 -----
 **almost breaking change**

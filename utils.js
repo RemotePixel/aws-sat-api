@@ -71,6 +71,20 @@ const parseSceneid_pre = (sceneid) => {
 };
 
 
+const parseCBERSid = (sceneid) => {
+  return {
+    scene_id: sceneid,
+    satellite: sceneid.split('_')[0],
+    version: sceneid.split('_')[1],
+    sensor: sceneid.split('_')[2],
+    path: sceneid.split('_')[4],
+    row: sceneid.split('_')[5],
+    acquisition_date: sceneid.split('_')[3],
+    processing_level: sceneid.split('_')[6]
+  };
+};
+
+
 const get_l8_info = (bucket, key, s3) => {
   const params = {
     Bucket: bucket,
@@ -168,6 +182,28 @@ const get_landsat = (path, row, full=false) => {
 };
 
 
+const get_cbers = (path, row) => {
+  const s3 = new AWS.S3({region: 'us-west-2'});
+  const cbers_bucket = 'cbers-pds';
+
+  row = utils.zeroPad(row, 3);
+  path = utils.zeroPad(path, 3);
+
+  // get list sceneid
+  const prefix = `CBERS4/MUX/${path}/${row}/`;
+  return utils.aws_list_directory(cbers_bucket, prefix, s3)
+    .then(dirs => {
+      dirs = [].concat.apply([], dirs);
+      return dirs.map(e => {
+        let cbers_id = e.split('/').slice(-2,-1)[0];
+        let info = utils.parseCBERSid(cbers_id);
+        let preview_id = cbers_id.split('_').slice(0,-1).join('_');
+        info.browseURL = `https://cbers-pds.s3.amazonaws.com/CBERS4/MUX/${path}/${row}/${cbers_id}/${preview_id}.jpg`;
+        return info;
+      });
+    });
+};
+
 const get_sentinel = (utm, lat, grid, full=false) => {
   const s3 = new AWS.S3({region: 'eu-central-1'});
   const sentinel_bucket = 'sentinel-s2-l1c';
@@ -233,8 +269,10 @@ const utils = {
   aws_list_directory:  aws_list_directory,
   parseSceneid_pre:    parseSceneid_pre,
   parseSceneid_c1:     parseSceneid_c1,
+  parseCBERSid:        parseCBERSid,
   get_sentinel:        get_sentinel,
   get_landsat:         get_landsat,
+  get_cbers:           get_cbers,
   get_s2_info:         get_s2_info,
   get_l8_info:         get_l8_info,
   zeroPad:             zeroPad
