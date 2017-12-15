@@ -249,7 +249,7 @@ const get_sentinel = (utm, lat, grid, full=false) => {
           browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${s2path}/preview.jpg`};
 
         const utm = utils.zeroPad(info.utm_zone, 2);
-        info.scene_id = `S2A_tile_${info.date}_${utm}${info.latitude_band}${info.grid_square}_${info.num}`;
+        info.scene_id = `S2A_tile_${info.acquisition_date}_${utm}${info.latitude_band}${info.grid_square}_${info.num}`;
 
         if (full) {
           let json_path = `${e}tileInfo.json`;
