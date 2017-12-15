@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.2
+-----
+- sentinel sceneid UTMzome bug fix
+
+
 0.1.1
 -----
 - add cbers support

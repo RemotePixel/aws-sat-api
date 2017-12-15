@@ -209,6 +209,8 @@ const get_sentinel = (utm, lat, grid, full=false) => {
   const sentinel_bucket = 'sentinel-s2-l1c';
   const img_year = utils.generate_year_range(2015, moment().year());
 
+  utm = utm.replace(/^0/, '');
+
   // get list of month
   return Promise.all(img_year.map(e => {
     let prefix = `tiles/${utm}/${lat}/${grid}/${e}/`;
@@ -246,7 +248,8 @@ const get_sentinel = (utm, lat, grid, full=false) => {
           acquisition_date: `${yeah}${month}${day}`,
           browseURL: `https://sentinel-s2-l1c.s3.amazonaws.com/${s2path}/preview.jpg`};
 
-        info.scene_id = `S2A_tile_${info.date}_${info.utm_zone}${info.latitude_band}${info.grid_square}_${info.num}`;
+        const utm = utils.zeroPad(info.utm_zone, 2);
+        info.scene_id = `S2A_tile_${info.date}_${utm}${info.latitude_band}${info.grid_square}_${info.num}`;
 
         if (full) {
           let json_path = `${e}tileInfo.json`;
