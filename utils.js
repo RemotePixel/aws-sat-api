@@ -183,8 +183,8 @@ const get_landsat = (path, row, full=false) => {
 
 
 const get_cbers = (path, row) => {
-  const s3 = new AWS.S3({region: 'us-west-2'});
-  const cbers_bucket = 'cbers-pds';
+  const s3 = new AWS.S3({region: 'us-east-1'});
+  const cbers_bucket = 'cbers-meta-pds';
 
   row = utils.zeroPad(row, 3);
   path = utils.zeroPad(path, 3);
@@ -198,7 +198,7 @@ const get_cbers = (path, row) => {
         let cbers_id = e.split('/').slice(-2,-1)[0];
         let info = utils.parseCBERSid(cbers_id);
         let preview_id = cbers_id.split('_').slice(0,-1).join('_');
-        info.browseURL = `https://cbers-pds.s3.amazonaws.com/CBERS4/MUX/${path}/${row}/${cbers_id}/${preview_id}.jpg`;
+        info.browseURL = `https://${cbers_bucket}.s3.amazonaws.com/CBERS4/MUX/${path}/${row}/${cbers_id}/${preview_id}_small.jpeg`;
         return info;
       });
     });

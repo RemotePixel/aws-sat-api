@@ -12,18 +12,12 @@ provider:
   iamRoleStatements:
     - Effect: "Allow"
       Action:
+        - "s3:ListBucket"
         - "s3:GetObject"
       Resource:
-        - "arn:aws:s3:::cbers-pds/*"
-        - "arn:aws:s3:::landsat-pds/*"
-        - "arn:aws:s3:::sentinel-s2-l1c/*"
-    - Effect: "Allow"
-      Action:
-        - "s3:ListBucket"
-      Resource:
-        - "arn:aws:s3:::cbers-pds"
-        - "arn:aws:s3:::landsat-pds"
-        - "arn:aws:s3:::sentinel-s2-l1c"
+        - "arn:aws:s3:::cbers-meta-pds*"
+        - "arn:aws:s3:::landsat-pds*"
+        - "arn:aws:s3:::sentinel-s2*"
 
   # deploymentBucket: remotepixel-${self:provider.region}
 

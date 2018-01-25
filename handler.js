@@ -38,7 +38,7 @@ module.exports.cbers = (event, context, callback) => {
   if (event.row === '') return callback(new Error('ROW param missing!'));
   if (event.path === '') return callback(new Error('PATH param missing!'));
 
-  utils.get_cbers(event.path, event.row, event.full)
+  utils.get_cbers(event.path, event.row)
     .then(data => {
       return callback(null, {
         request: { path: event.path, row: event.row },
