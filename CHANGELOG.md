@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.2.0
+-----
+- Change CBERS bucket
+
+
 0.1.2
 -----
 - sentinel sceneid UTMzome bug fix
