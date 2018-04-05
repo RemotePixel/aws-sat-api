@@ -1,4 +1,7 @@
 # aws-sat-api
+
+:warning: this lib is not actively maintained and has been replaced by https://github.com/RemotePixel/aws-sat-api-py
+
 Simple Serverless API for Sentinel-2 and Landsat-8 data hosted on AWS
 
 A really simple non-spatial API to get Landsat-8 and Sentinel-2(A and B) images hosed on AWS S3
